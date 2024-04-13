@@ -1,4 +1,6 @@
 # Shopping-App
+<br> Gaspard Torterat
+<br> stu n°74536
 <br> ✅ 1. Authentication
 <br> ✅ 1.1. Allow User to Signup
 <br> ✅ 1.2. Log In using username and password
