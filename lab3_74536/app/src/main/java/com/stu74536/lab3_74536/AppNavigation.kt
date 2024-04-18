@@ -79,6 +79,10 @@ fun AppNavigation() {
                 VerifyToken(auth = FirebaseAuth.getInstance(), navController = navController)
                 Profile(navController)
             }
+            composable(Routes.About.route){
+                VerifyToken(auth = FirebaseAuth.getInstance(), navController = navController)
+                About(navController)
+            }
         }
     }
 }

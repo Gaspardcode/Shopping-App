@@ -1,6 +1,5 @@
 package com.stu74536.lab3_74536
 
-import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

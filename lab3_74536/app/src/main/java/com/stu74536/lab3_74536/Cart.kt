@@ -1,6 +1,5 @@
 package com.stu74536.lab3_74536
 
-import android.icu.text.NumberFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,31 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.google.firebase.auth.FirebaseAuth
 import com.stu74536.lab3_74536.ui.theme.roboto
 
 
-data class ShoppingCart (
-    var totalPrice: Double,
-    var shopIts:List<ShoppingItem>,
-    var butEnabled:Boolean,
-)
-data class ShoppingItem (
-    var quantity:Int,
-    var product:Product,
-)
 
-fun sToF(input: String): Float {
-    val nf = NumberFormat.getInstance()
-    return nf.parse(input).toFloat()
-}
-public fun addToCartInApp(sc:ShoppingCart, shopIt:ShoppingItem) {
-    sc.totalPrice += (shopIt.product.price * shopIt.quantity)
-    sc.shopIts += shopIt
-}
-public fun remFCart(sc:ShoppingCart, shopIt:ShoppingItem) {
-    sc.totalPrice -= (shopIt.product.price * shopIt.quantity)
-    sc.shopIts -= shopIt
-}
 @Composable
 fun ShoppingCartHeader() {
     Row(
@@ -97,7 +78,7 @@ fun ShoppingCartHeader() {
             modifier = Modifier
                 .padding(8.dp)
                 .size(100.dp)
-                .clip(RoundedCornerShape(corner = CornerSize(16.dp))))
+                .clip(CircleShape))
     }
 }
 @Composable
@@ -115,70 +96,94 @@ fun CartList(navController: NavController,shoppingCart: ShoppingCart){
                 .fillMaxWidth()
                 .fillMaxHeight(0.7f)
         ) {
+            items(shoppingCart.shopIts) { shopIt ->
+                CartItem(navController, shoppingCart, shopIt)
+            }
+        }
+        /*
             this.items(
-                items = shoppingCart.shopIts,
+                items = sc.shopIts,
                 itemContent = {
                     CartItem(navController, sc = shoppingCart, shopIt = it)
                 })
-        }
+         */
         Bottom(shoppingCart)
     }
-
 }
 @Composable
 fun Bottom(sc: ShoppingCart){
+    Spacer(Modifier.height(20.dp))
     Column {
         Row(
             horizontalArrangement = Arrangement.Start
         ) {
-            Spacer(Modifier.width(10.dp))
-            Text(text = "Total : " + sc.totalPrice.toString() + "€", fontWeight = Bold)
+            Spacer(Modifier.width(20.dp))
+            Text(text = "Total : ${String.format("%.2f", sc.totalPrice)}€", fontWeight = Bold)
+            Spacer(Modifier.width(100.dp))
+            Text(text="${sc.shopIts.size}", color = Color.White,fontWeight = Bold)
+            Text(text=" Orders",fontWeight = Bold)
+            }
         }
         Spacer(Modifier.height(5.dp))
-        BuyButton()
-    }
+        BuyButton(sc)
 }
 @Composable
 fun CartItem(navController: NavController,sc: ShoppingCart,shopIt: ShoppingItem){
-    Card(
-        modifier = Modifier
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(corner = CornerSize(16.dp))
-    ) {
-        Row {
-            ProductImage(shopIt.product)
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Center) {
-                Text(text = shopIt.product.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontFamily = roboto)
-                Spacer(Modifier.height(5.dp))
-                Text(text = shopIt.quantity.toString() + " x " + shopIt.product.price.toString() + "€",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontFamily = roboto)
-                Spacer(Modifier.height(5.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ){
-                    Icon(imageVector = Icons.Default.Cancel,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .clickable { remFCart(sc, shopIt) }
-                            .size(50.dp, 50.dp),
-                        tint = Color.White
-                    )
+    val user = FirebaseAuth.getInstance().currentUser!!
+    var show by remember { mutableStateOf(true) }
+    if (show){
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(corner = CornerSize(16.dp))
+        ) {
+            Row {
+                ShoppingImage(shopIt)
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center) {
+                    Text(text = shopIt.product.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontFamily = roboto)
+                    Spacer(Modifier.height(5.dp))
+                    Text(text = shopIt.quantity.toString() + " x " + shopIt.product.price.toString() + "€",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontFamily = roboto)
+                    Spacer(Modifier.height(5.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ){
+                        Icon(imageVector = Icons.Default.Cancel,
+                            contentDescription = null,
+                            modifier = Modifier.run {
+                                clickable {
+                                //show = false
+                                remFCart(sc, shopIt)
+                                rmFromFireStore(user.uid, shopIt.product.id)
+                                navController.navigate(Routes.Cart.route)
+                            }
+                            .size(50.dp, 50.dp)
+                            },
+                            tint = Color.White
+                        )
+                    }
                 }
             }
         }
     }
 }
 @Composable
-fun BuyButton(){
+fun BuyButton(sc:ShoppingCart){
+    val buttonColors = if (sc.totalPrice > 0.0) {
+        ButtonDefaults.buttonColors(Color.Gray)
+    } else {
+        ButtonDefaults.buttonColors(lBlack)
+    }
+
     Column(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
@@ -188,45 +193,46 @@ fun BuyButton(){
             onClick = {},
             shape = RectangleShape,
             modifier = Modifier
-                .fillMaxWidth(0.9f)
+                .fillMaxWidth()
                 .padding(20.dp),
-            colors = ButtonDefaults.buttonColors(lBlack),
+            colors = buttonColors,
             content = {
-                Text(text = "Proceed to checkout")
+                Text(text = "Proceed to checkout", color = Color.White)
             })
     }
 }
 @Composable
 fun Cart(navController: NavController) {
-    val product by remember {
-        mutableStateOf(
-            Product(
-                "",
-                "Product Not Found",
-                123.4,
-                3,
-                "lalalal",
-                "https://thispersondoesnotexist.com/"
-            )
-        )
-    }
+    val user = FirebaseAuth.getInstance().currentUser!!
     var sc by remember {
         mutableStateOf(
-            ShoppingCart(1234.5, List<ShoppingItem>(2) {
-                            ShoppingItem(12, product);
-                            ShoppingItem(12, product)
-                        }, true))
+            ShoppingCart()
+        )
     }
-    Column(
+    GetCart(user.uid) { shoppingCart ->
+        sc = shoppingCart
+    }
+    Column (
         modifier = Modifier
             .background(Color.Black)
             .fillMaxSize()
     ) {
         ShoppingCartHeader()
         CartList(navController, shoppingCart = sc)
-        Button(onClick = { /*TODO*/ }) {
-            
-        }
+        /*
+        Button(onClick = {
+            runBlocking {
+                launch(Dispatchers.IO) {
+                    pushFashionItemsToFirestore(fashionItems, collectionName)
+                    pushFashionItemsToFirestore(fashionItems, "categories/clothing/products")
+                    pushFashionItemsToFirestore(electronicItems, collectionName)
+                    pushFashionItemsToFirestore(fashionItems, "categories/electronics/products")
+                    pushFashionItemsToFirestore(householdItems, collectionName)
+                    pushFashionItemsToFirestore(fashionItems, "categories/household/products")
+                }
+            }
+        }, content = {})
+         */
     }
 }
 

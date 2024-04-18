@@ -1,26 +1,31 @@
 package com.stu74536.lab3_74536
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +47,12 @@ import com.google.firebase.auth.auth
 
 @Composable
 fun Profile(navController: NavController){
-    Column {
+    Column (
+        modifier = Modifier
+            .background(Color.Black)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
         ProfileHeader()
         LazyColumn(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -51,8 +61,21 @@ fun Profile(navController: NavController){
                 SignOut(navController)
                 Spacer(Modifier.height(10.dp))
                 DeleteAccount(navController)
+                Spacer(Modifier.height(20.dp))
+                Email(navController)
             }
         }
+        Spacer(Modifier.height(400.dp))
+        Text(
+            text = "About this App",
+            color = White,
+            modifier = Modifier.clickable { navController.navigate(Routes.About.route) },
+        )
+    }
+}
+@Composable
+fun Email(navController: NavController){
+    RegularCardEditor(Firebase.auth.currentUser!!.email.toString(), Icons.Default.Person, "") {
     }
 }
 @Composable
@@ -70,7 +93,7 @@ fun ProfileHeader() {
                 modifier = Modifier.padding(top = 24.dp),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = Color.Black)
+                color = Color.White)
             Text(text = "Profile",
                 modifier = Modifier.padding(top = 24.dp),
                 fontWeight = FontWeight.Bold,
@@ -84,7 +107,8 @@ fun ProfileHeader() {
             modifier = Modifier
                 .padding(8.dp)
                 .size(100.dp)
-                .clip(RoundedCornerShape(corner = CornerSize(16.dp))))
+                .clip(CircleShape),
+        )
     }
 }
 
@@ -98,12 +122,13 @@ private fun SignOut(navController: NavController) {
 
     if (showWarningDialog) {
         AlertDialog(
-            title = { Text(text = "Log out") },
-            text = { Text(text = "You are about to logout") },
+            backgroundColor = lBlack,
+            title = { Text(text = "Log out",color = Color.White)  },
+            text = { Text(text = "You are about to logout",color = Color.White) },
             dismissButton = { Button (
                 onClick = { showWarningDialog = false }
             )
-            { Text(text = "Cancel") } },
+            { Text(text = "Cancel",color = Color.White) } },
             confirmButton = {
                 Button (
                     onClick = {
@@ -111,7 +136,7 @@ private fun SignOut(navController: NavController) {
                         showWarningDialog = false
                         navController.navigate(Routes.Login.route) }
                 )
-                { Text(text = "Confirm") }
+                { Text(text = "Confirm",color = Color.White) }
             },
             onDismissRequest = { showWarningDialog = false }
         )
@@ -127,12 +152,13 @@ private fun DeleteAccount(navController: NavController) {
 
     if (showWarningDialog) {
         AlertDialog(
-            title = { Text(text = "Delete") },
-            text = { Text(text = "You are about to delete your account") },
+            backgroundColor = lBlack,
+            title = { Text(text = "Delete",color = Color.White) },
+            text = { Text(text = "You are about to delete your account",color = Color.White) },
             dismissButton = { Button (
                 onClick = { showWarningDialog = false }
             )
-            { Text(text = "Cancel") } },
+            { Text(text = "Cancel",color = Color.White) } },
             confirmButton = {
                 Button (
                     onClick = {
@@ -141,7 +167,7 @@ private fun DeleteAccount(navController: NavController) {
                         showWarningDialog = false
                         navController.navigate(Routes.Register.route) }
                 )
-                { Text(text = "Confirm") }
+                { Text(text = "Confirm",color = Color.White) }
             },
             onDismissRequest = { showWarningDialog = false }
         )

@@ -36,6 +36,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import com.stu74536.lab3_74536.ui.theme.roboto
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun ProductsScreen(navController: NavController, products:List<Product>,catId:String){
@@ -76,6 +79,7 @@ fun ProductScreen(navController: NavController, product:Product) {
 @Composable
 fun Bottom(navController: NavController, product:Product) {
     var qty by remember { mutableIntStateOf(0) }
+    //var action by remember { mutableStateOf("0") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -115,15 +119,21 @@ fun Bottom(navController: NavController, product:Product) {
             Spacer(modifier = Modifier.width(5.dp))
             Button(onClick = {
                 val user = FirebaseAuth.getInstance().currentUser
-                if(user != null){
-                    addToCart(user.uid,product.title,qty,product.price) ;
+                if(user != null && qty > 0){
+                    val shopIt = Prod2ShopIt(product,qty)
+                    runBlocking {
+                        launch(Dispatchers.IO) {
+                            addToFireStore(user.uid,shopIt)
+                        }
+                    }
                 }
                 qty = 0;},
                 content = {
-                    Text(text = "BUY")
+                    Text(text = "Add To Cart")
                 })
             Spacer(modifier = Modifier.width(5.dp))
             Text(text = "Stock left : " + product.stock.toString())
         }
+        Spacer(Modifier.height(10.dp))
     }
 }

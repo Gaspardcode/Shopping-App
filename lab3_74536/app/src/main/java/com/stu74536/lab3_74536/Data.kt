@@ -2,8 +2,8 @@ package com.stu74536.lab3_74536
 
 import android.util.Log
 import com.google.firebase.Firebase
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.tasks.await
 
 data class Name (
@@ -29,12 +29,12 @@ data class User (
     val phone: String,
 )
 data class Product (
-    val id: String,
-    val title: String,
-    val price: Double,
-    var stock: Long,
-    val description:String,
-    val image: String,
+    val id: String = "",
+    val title: String = "",
+    var price: Double = 0.0,
+    var stock: Long = 0,
+    val description: String = "",
+    val image: String = ""
 )
 data class Category (
     val id: String,
@@ -42,6 +42,26 @@ data class Category (
     val image:String,
 )
 
+data class ShoppingCart (
+    var totalPrice: Double = 0.0,
+    var shopIts:List<ShoppingItem> = emptyList(),
+    var butEnabled:Boolean = false,
+)
+data class ShoppingItem (
+    var quantity:Int = 0,
+    var product:Product = Product(),
+)
+fun Prod2ShopIt(prod:Product, qty:Int) :ShoppingItem{
+    return ShoppingItem(qty,prod)
+}
+fun addToCartInApp(sc:ShoppingCart, shopIt:ShoppingItem) {
+    sc.totalPrice += (shopIt.product.price * shopIt.quantity.toDouble())
+    sc.shopIts += shopIt
+}
+fun remFCart(sc:ShoppingCart, shopIt:ShoppingItem) {
+    sc.totalPrice -= (shopIt.product.price * shopIt.quantity.toDouble())
+    sc.shopIts = sc.shopIts.filter { it.product.id != shopIt.product.id  }
+}
 fun fetchCategories(onResult: (List<Category>) -> Unit) {
     Firebase.firestore.collection("categories")
         .get()
@@ -57,7 +77,6 @@ fun fetchCategories(onResult: (List<Category>) -> Unit) {
 }
 suspend fun fetchPbyCat(category: String?): List<Product> {
     val products = mutableListOf<Product>()
-
     try {
         val querySnapshot =
             Firebase.firestore.collection("categories/$category/products").get().await()
@@ -100,55 +119,40 @@ suspend fun fetchProd(catId: String,prodId: String): Product {
         Product("", "Error Fetching Product", 0.0,0,"","")
     }
 }
-fun addToCart(userId: String, productId: String, quantity: Int, price: Double) {
+suspend fun addToFireStore(userId: String, shoppingItem: ShoppingItem) {
     val db = Firebase.firestore
-    val cartRef = db.collection("users").document(userId).collection("cart").document(productId)
-
-    cartRef.get().addOnSuccessListener { documentSnapshot ->
-        if (documentSnapshot.exists()) {
-            val existingQuantity = documentSnapshot.getLong("quantity") ?: 0
-            val newQuantity = existingQuantity + quantity
-
-            cartRef.update("quantity", newQuantity)
-        } else {
-            val newCartItem = hashMapOf(
-                "quantity" to quantity,
-                "price" to price
-            )
-            cartRef.set(newCartItem)
-        }
-    }
-
-    val data = db.collection("users").document(userId).collection("cart").document("data")
-
-    cartRef.get().addOnSuccessListener { documentSnapshot ->
-        if (documentSnapshot.exists()) {
-            val existingQuantity = documentSnapshot.getDouble("total") ?: 0.0
-            val newQuantity = existingQuantity + quantity
-            cartRef.update("total", newQuantity)
-        } else {
-            val newCartItem = hashMapOf(
-                "quantity" to quantity,
-                "price" to price
-            )
-            cartRef.set(newCartItem)
-        }
+    val cartRef = db.collection("users").document(userId)
+    val shoppingItemRef = cartRef.collection("cart").document(shoppingItem.product.id)
+    try {
+        shoppingItemRef.set(shoppingItem).await()
+    } catch (e: Exception) {
+        println("Error adding shopping item to cart: $e")
     }
 }
-
-// Function to update the quantity of a product in the cart
-fun updateCartItemQuantity(userId: String, productId: String, newQuantity: Int, price: Double) {
+fun rmFromFireStore(userId: String, productId: String) {
     val db = Firebase.firestore
     val cartRef = db.collection("users").document(userId).collection("cart").document(productId)
-
-    cartRef.update("quantity", newQuantity, "price", (newQuantity * price))
-}
-
-// Function to remove a product from the cart
-fun removeFromCart(userId: String, productId: String) {
-    val db = Firebase.firestore
-    val cartRef = db.collection("users").document(userId).collection("cart").document(productId)
-
     cartRef.delete()
+}
+fun GetCart(userId: String, callback: (ShoppingCart) -> Unit) {
+    val shopCart = ShoppingCart(0.0,emptyList(),false)
+    Firebase.firestore
+        .collection("users")
+        .document(userId)
+        .collection("cart")
+        .get()
+        .addOnSuccessListener { querySnapshot ->
+            for (document in querySnapshot.documents) {
+                val shopIt = document.toObject<ShoppingItem>()
+                if( shopIt != null){
+                    addToCartInApp(shopCart,shopIt)
+                }
+            }
+            callback(shopCart)
+        }
+        .addOnFailureListener { e ->
+            Log.d("Firestore", "Error getting documents: $e")
+            // Handle error
+        }
 }
 // ===============================================================

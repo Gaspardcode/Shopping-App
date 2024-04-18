@@ -35,6 +35,18 @@ fun ProductImage(product: Product) {
             .clip(RoundedCornerShape(corner = CornerSize(24.dp)))
     )
 }
+@Composable
+fun ShoppingImage(shopIt: ShoppingItem) {
+    AsyncImage(
+        model = shopIt.product.image,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .padding(14.dp)
+            .size(120.dp)
+            .clip(RoundedCornerShape(corner = CornerSize(24.dp)))
+    )
+}
 
 @Composable
 fun ProductListItem(product: Product, navController: NavController, catId:String) {
