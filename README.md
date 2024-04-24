@@ -14,7 +14,7 @@
 <br> ✅ 3.2. Show total amount
 <br> ❌ 3.3. Purchase button to place an order, show order notification
 <br> ❌ 4. Show order history
-<br> ❌ 4.1. List users orders
+<br> ✅ 4.1. List users orders
 <br> ❌ 4.2. On clicking an Order, show Order details and Products ordered
 <br> ❌ 4.3. On clicking a Product, take them to Product description page created for 2.3
 <br> ✅ 5. Show User details
@@ -24,7 +24,7 @@
 <br> ✅ 6. UI/Implementational Requirements
 <br> ✅ 6.1. Lazy lists to be used for all Lists: Categories, Products, Orders
 <br> ✅ 6.2. If logged in, attach authentication token to all requests until logout
-<br> ❌ 6.3. Add a small "About this app" button in the profile page, that shows a page on click with your copyright details and credits
+<br> ✅ 6.3. Add a small "About this app" button in the profile page, that shows a page on click with your copyright details and credits
 <br> ✅ 7. Bonus
 <br> ✅ 7.1. ViewPager2 with bottom TabLayout for: Shop, Cart, Orders, Profile icons
 <br> ❌ 7.2. Show a map fragment based on the GPS co-ordinates in the user profile
