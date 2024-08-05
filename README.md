@@ -1,6 +1,14 @@
 # Shopping-App
-<br> Gaspard Torterat
-<br> stu n°74536
+
+## Demo  
+[![recap](https://github.com/user-attachments/assets/8456cf5f-93fd-481d-9fe1-dfdce688a146)](https://youtu.be/YGG31EKxrDE)
+
+<div align="center">
+    <video src="https://github.com/user-attachments/assets/9c91536d-a88b-4186-8105-9dbb0dd247d2" width="500"/>
+</div>
+      
+# Features
+
 <br> ✅ 1. Authentication
 <br> ✅ 1.1. Allow User to Signup
 <br> ✅ 1.2. Log In using username and password
